@@ -1,0 +1,26 @@
+service ClaimsService {
+  rpc CreateClaim (CreateClaimRequest) returns (ClaimResponse);
+  rpc GetClaims (GetClaimsRequest) returns (GetClaimsResponse);
+  rpc GetClaimsByStatus (GetClaimsByStatusRequest) returns (GetClaimsResponse);
+  rpc GetClaimById (GetClaimByIdRequest) returns (ClaimResponse);
+  rpc UpdateClaim (UpdateClaimRequest) returns (ClaimResponse);
+  rpc DeleteClaim (DeleteClaimRequest) returns (ClaimResponse);
+  rpc ChangeStatus (UpdateClaimStatusRequest) returns (ClaimResponse);
+}
+
+message GetClaimsByStatusRequest {
+  string status = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message UpdateClaimRequest {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string status = 4;
+}
+
+message DeleteClaimRequest {
+  string id = 1;
+}
