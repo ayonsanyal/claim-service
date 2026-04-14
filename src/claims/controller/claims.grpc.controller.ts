@@ -7,28 +7,34 @@ import { ClaimStatus } from '@prisma/client';
 export class ClaimsGrpcController {
   constructor(private readonly service: ClaimsService) {}
 
-  // ✅ Create
   @GrpcMethod('ClaimsService', 'CreateClaim')
-  async createClaim(data: { title: string; description: string }) {
-    const claim = await this.service.create(data);
+  async createClaim(data: {
+    title: string;
+    description: string;
+    userId: string;
+  }) {
+    const claim = await this.service.create(
+      { title: data.title, description: data.description },
+      data.userId,
+    );
     return { claim };
   }
 
   @GrpcMethod('ClaimsService', 'GetClaims')
-  async getClaims(data: { limit?: number; offset?: number }) {
-    const query = {
-      limit: data.limit ?? 10,
-      offset: data.offset ?? 0,
-    };
+  async getClaims(data: {
+    limit?: number;
+    offset?: number;
+    userId: string;
+  }) {
+    const result = await this.service.findAll(
+      {
+        limit: data.limit ?? 10,
+        offset: data.offset ?? 0,
+      } as any,
+      data.userId,
+    );
 
-    const result = await this.service.findAll(query as any);
-
-    return {
-      limit: result.limit,
-      offset: result.offset,
-      count: result.count,
-      data: result.data,
-    };
+    return result;
   }
 
   @GrpcMethod('ClaimsService', 'GetClaimsByStatus')
@@ -36,27 +42,26 @@ export class ClaimsGrpcController {
     status: string;
     limit?: number;
     offset?: number;
+    userId: string;
   }) {
     const query = {
       limit: data.limit ?? 10,
       offset: data.offset ?? 0,
-      status: data.status,
-      getNormalizedStatus: () => data.status.toUpperCase() as ClaimStatus,
+      getNormalizedStatus: () =>
+        data.status.toUpperCase() as ClaimStatus,
     };
 
-    const result = await this.service.findAllByStatus(query as any);
+    const result = await this.service.findAllByStatus(
+      query as any,
+      data.userId,
+    );
 
-    return {
-      limit: result.limit,
-      offset: result.offset,
-      count: result.count,
-      data: result.data,
-    };
+    return result;
   }
 
   @GrpcMethod('ClaimsService', 'GetClaimById')
-  async getClaimById(data: { id: string }) {
-    const claim = await this.service.findOne(data.id);
+  async getClaimById(data: { id: string; userId: string }) {
+    const claim = await this.service.findOne(data.id, data.userId);
     return { claim };
   }
 
@@ -65,31 +70,39 @@ export class ClaimsGrpcController {
     id: string;
     title?: string;
     description?: string;
-    status?: string;
+    userId: string;
   }) {
-    const normalizedStatus = data.status
-      ? (data.status.toUpperCase() as ClaimStatus)
-      : undefined;
-
-    const claim = await this.service.update(data.id, {
-      ...data,
-      status: normalizedStatus,
-    });
+    const claim = await this.service.update(
+      data.id,
+      data.userId,
+      {
+        title: data.title,
+        description: data.description,
+      },
+    );
 
     return { claim };
   }
 
   @GrpcMethod('ClaimsService', 'DeleteClaim')
-  async deleteClaim(data: { id: string }) {
-    const claim = await this.service.delete(data.id);
+  async deleteClaim(data: { id: string; userId: string }) {
+    const claim = await this.service.delete(data.id, data.userId);
     return { claim };
   }
 
   @GrpcMethod('ClaimsService', 'ChangeStatus')
-  async changeStatus(data: { id: string; status: string }) {
+  async changeStatus(data: {
+    id: string;
+    status: string;
+    userId: string;
+  }) {
     const status = data.status.toUpperCase() as ClaimStatus;
 
-    const claim = await this.service.changeStatus(data.id, status);
+    const claim = await this.service.changeStatus(
+      data.id,
+      data.userId,
+      status,
+    );
 
     return { claim };
   }

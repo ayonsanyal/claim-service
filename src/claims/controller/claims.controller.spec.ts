@@ -1,141 +1,105 @@
+import { Test, TestingModule } from '@nestjs/testing';
 import { ClaimsController } from './claim.controller';
 import { ClaimsService } from 'src/claims/service/claim.service';
 import { ClaimStatus } from '@prisma/client';
 
 describe('ClaimsController', () => {
   let controller: ClaimsController;
-  let service: jest.Mocked<ClaimsService>;
 
-  const mockClaim = {
-    id: '1',
-    title: 'Test',
-    description: 'Test desc',
-    status: ClaimStatus.OPEN,
-    createdAt: new Date(),
+  const userId = 'user-1';
+
+  const serviceMock = {
+    create: jest.fn(),
+    findAll: jest.fn(),
+    findAllByStatus: jest.fn(),
+    findOne: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    changeStatus: jest.fn(),
   };
 
-  beforeEach(() => {
-    service = {
-      create: jest.fn(),
-      findAll: jest.fn(),
-      findAllByStatus: jest.fn(),
-      findOne: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      changeStatus: jest.fn(),
-    } as any;
+  const mockReq = {
+    user: { userId },
+  };
 
-    controller = new ClaimsController(service);
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [ClaimsController],
+      providers: [
+        { provide: ClaimsService, useValue: serviceMock },
+      ],
+    }).compile();
+
+    controller = module.get<ClaimsController>(ClaimsController);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should create claim', async () => {
-    service.create.mockResolvedValue(mockClaim);
+ 
+  it('should create claim with userId', async () => {
+    serviceMock.create.mockResolvedValue({ id: '1' });
 
-    const dto: any = {
+    await controller.create(mockReq as any, {
       title: 'Test',
       description: 'Test desc',
-    };
-
-    const result = await controller.create(dto);
-
-    expect(service.create).toHaveBeenCalledWith(dto);
-    expect(result).toEqual(mockClaim);
-  });
-
-  it('should return all claims', async () => {
-    const response = {
-      limit: 10,
-      offset: 0,
-      count: 1,
-      data: [mockClaim],
-    };
-
-    service.findAll.mockResolvedValue(response);
-
-    const query: any = { limit: 10, offset: 0 };
-
-    const result = await controller.findAll(query);
-
-    expect(service.findAll).toHaveBeenCalledWith(query);
-    expect(result).toEqual(response);
-  });
-
-  it('should return claims by status', async () => {
-    const response = {
-      limit: 10,
-      offset: 0,
-      count: 1,
-      data: [mockClaim],
-    };
-
-    service.findAllByStatus.mockResolvedValue(response);
-
-    const query: any = { status: 'OPEN', limit: 10, offset: 0 };
-
-    const result = await controller.findAllByStatus(query);
-
-    expect(service.findAllByStatus).toHaveBeenCalledWith(query);
-    expect(result).toEqual(response);
-  });
-
-  it('should return claim by id', async () => {
-    service.findOne.mockResolvedValue(mockClaim);
-
-    const result = await controller.findOne('1');
-
-    expect(service.findOne).toHaveBeenCalledWith('1');
-    expect(result).toEqual(mockClaim);
-  });
-
-  it('should update claim', async () => {
-    const dto: any = {
-      getNormalizedStatus: jest.fn().mockReturnValue(ClaimStatus.CLOSED),
-    };
-
-    service.update.mockResolvedValue({
-      ...mockClaim,
-      status: ClaimStatus.CLOSED,
     });
 
-    const result = await controller.update('1', dto);
-
-    expect(dto.getNormalizedStatus).toHaveBeenCalled();
-    expect(service.update).toHaveBeenCalledWith('1', ClaimStatus.CLOSED);
-
-    expect(result.status).toBe(ClaimStatus.CLOSED);
+    expect(serviceMock.create).toHaveBeenCalledWith(
+      { title: 'Test', description: 'Test desc' },
+      userId,
+    );
   });
 
-  it('should delete claim', async () => {
-    service.delete.mockResolvedValue(mockClaim);
 
-    const result = await controller.delete('1');
+  it('should call findAll with userId', async () => {
+    await controller.findAll(mockReq as any, {} as any);
 
-    expect(service.delete).toHaveBeenCalledWith('1');
-    expect(result).toEqual(mockClaim);
+    expect(serviceMock.findAll).toHaveBeenCalledWith({}, userId);
   });
 
-  it('should change claim status', async () => {
-    const dto: any = {
-      toEnum: jest.fn().mockReturnValue(ClaimStatus.IN_REVIEW),
+  
+  it('should call findAllByStatus with userId', async () => {
+    await controller.findAllByStatus(mockReq as any, {} as any);
+
+    expect(serviceMock.findAllByStatus).toHaveBeenCalledWith({}, userId);
+  });
+
+  
+  it('should call findOne with userId', async () => {
+    await controller.findOne(mockReq as any, '1');
+
+    expect(serviceMock.findOne).toHaveBeenCalledWith('1', userId);
+  });
+
+ 
+  it('should call update with userId', async () => {
+    const body = { title: 'Updated' };
+
+    await controller.update(mockReq as any, '1', body as any);
+
+    expect(serviceMock.update).toHaveBeenCalledWith('1', userId, body);
+  });
+
+ 
+  it('should call delete with userId', async () => {
+    await controller.delete(mockReq as any, '1');
+
+    expect(serviceMock.delete).toHaveBeenCalledWith('1', userId);
+  });
+
+  it('should call changeStatus with userId', async () => {
+    const body = {
+      toEnum: () => ClaimStatus.IN_REVIEW,
     };
 
-    service.changeStatus.mockResolvedValue({
-      ...mockClaim,
-      status: ClaimStatus.IN_REVIEW,
-    });
+    await controller.changeStatus(mockReq as any, '1', body as any);
 
-    const result = await controller.changeStatus('1', dto);
-
-    expect(dto.toEnum).toHaveBeenCalled();
-    expect(service.changeStatus).toHaveBeenCalledWith(
+    expect(serviceMock.changeStatus).toHaveBeenCalledWith(
       '1',
+      userId,
       ClaimStatus.IN_REVIEW,
     );
-
-    expect(result.status).toBe(ClaimStatus.IN_REVIEW);
   });
 });

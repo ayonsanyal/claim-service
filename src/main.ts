@@ -6,11 +6,11 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { Transport } from '@nestjs/microservices';
 import { join } from 'path';
-import { LoggingInterceptor } from 'src/common/logging/logging.interceptor';
+import { LoggingInterceptor } from 'src/claims/common/logging/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalInterceptors(new LoggingInterceptor());
+ app.useGlobalInterceptors(new LoggingInterceptor());
   //Global validation
   app.useGlobalPipes(
     new ValidationPipe({
@@ -20,16 +20,31 @@ async function bootstrap() {
     }),
   );
 
+
   //  Swagger setup
   const config = new DocumentBuilder()
     .setTitle('Claim Service API')
     .setDescription('API for managing claims')
     .setVersion('1.0')
     .addTag('claims')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'access-token',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+  
+  document.security = [{ 'access-token': [] }];
   SwaggerModule.setup('api', app, document);
+  app.enableCors({
+    origin: '*',
+  });
+  //grpc exposure
   app.connectMicroservice({
     transport: Transport.GRPC,
     options: {

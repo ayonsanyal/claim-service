@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15
-    container_name: claim-postgres
+    container_name: stotage-claim-postgres
     restart: always
     environment:
       POSTGRES_USER: claim

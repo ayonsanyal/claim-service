@@ -8,62 +8,67 @@ import {
   Put,
   Delete,
   Query,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
-import { ApiTags, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ClaimsService } from 'src/claims/service/claim.service';
 import { CreateClaimDto } from 'src/claims/claim.dto';
 import { UpdateClaimDto } from 'src/claims/update.claim.dto';
 import { UpdateStatusDto } from 'src/claims/update.claim.status';
-import { QueryClaimDto } from 'src/claims/qury.claim.dto';
+import { QueryClaimDto } from 'src/claims/query.claim.dto';
+import { JwtAuthGuard } from 'src/auth/jwt.guard';
 
-@ApiTags('claims')
+@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard)
 @Controller('claims')
 export class ClaimsController {
   constructor(private readonly service: ClaimsService) {}
 
   @Post()
-  @ApiQuery({ name: 'name', required: true, type: String })
-  @ApiQuery({ name: 'description', required: true, type: String })
-  create(@Body() body: CreateClaimDto) {
-    return this.service.create(body);
+  create(@Req() req, @Body() body: CreateClaimDto) {
+    return this.service.create(body, req.user.userId);
   }
 
-  @ApiQuery({ name: 'limit', required: true, type: Number })
-  @ApiQuery({ name: 'offset', required: true, type: Number })
   @Get()
-  findAll(@Query() query: QueryClaimDto) {
-    return this.service.findAll(query);
+  findAll(@Req() req, @Query() query: QueryClaimDto) {
+    return this.service.findAll(query, req.user.userId);
   }
 
   @Get('status')
-  @ApiQuery({ name: 'limit', required: true, type: Number })
-  @ApiQuery({ name: 'offset', required: true, type: Number })
-  @ApiQuery({ name: 'status', required: true, type: String })
-  findAllByStatus(@Query() query: QueryClaimDto) {
-    return this.service.findAllByStatus(query);
+  findAllByStatus(@Req() req, @Query() query: QueryClaimDto) {
+    return this.service.findAllByStatus(query, req.user.userId);
   }
 
-  @ApiQuery({ name: 'id', required: true, type: String })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+  findOne(@Req() req, @Param('id') id: string) {
+    return this.service.findOne(id, req.user.userId);
   }
 
   @Put(':id')
-  @ApiQuery({ name: 'id', required: true, type: String })
-  update(@Param('id') id: string, @Body() body: UpdateClaimDto) {
-    return this.service.update(id, body.getNormalizedStatus());
+  update(
+    @Req() req,
+    @Param('id') id: string,
+    @Body() body: UpdateClaimDto,
+  ) {
+    return this.service.update(id, req.user.userId, body);
   }
 
   @Delete(':id')
-  @ApiQuery({ name: 'id', required: true, type: String })
-  delete(@Param('id') id: string) {
-    return this.service.delete(id);
+  delete(@Req() req, @Param('id') id: string) {
+    return this.service.delete(id, req.user.userId);
   }
 
   @Patch(':id/status')
-  @ApiQuery({ name: 'id', required: true, type: String })
-  changeStatus(@Param('id') id: string, @Body() body: UpdateStatusDto) {
-    return this.service.changeStatus(id, body.toEnum());
+  changeStatus(
+    @Req() req,
+    @Param('id') id: string,
+    @Body() body: UpdateStatusDto,
+  ) {
+    return this.service.changeStatus(
+      id,
+      req.user.userId,
+      body.toEnum(),
+    );
   }
 }

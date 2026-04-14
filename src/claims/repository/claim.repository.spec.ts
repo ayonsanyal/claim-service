@@ -11,6 +11,7 @@ describe('ClaimsRepository', () => {
     title: 'Test',
     description: 'Test desc',
     status: ClaimStatus.OPEN,
+    userId: 'user-1',
     createdAt: new Date(),
   };
 
@@ -19,7 +20,7 @@ describe('ClaimsRepository', () => {
       claim: {
         create: jest.fn(),
         findMany: jest.fn(),
-        findUnique: jest.fn(),
+        findFirst: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
       },
@@ -32,13 +33,15 @@ describe('ClaimsRepository', () => {
     jest.clearAllMocks();
   });
 
-  it('should create a claim', async () => {
+
+  it('should create a claim with userId', async () => {
     prisma.claim.create.mockResolvedValue(mockClaim);
 
     const result = await repo.create({
       title: 'Test',
       description: 'Test desc',
       status: ClaimStatus.OPEN,
+      userId: 'user-1',
     } as any);
 
     expect(prisma.claim.create).toHaveBeenCalledWith({
@@ -46,18 +49,25 @@ describe('ClaimsRepository', () => {
         title: 'Test',
         description: 'Test desc',
         status: ClaimStatus.OPEN,
+        userId: 'user-1',
       },
     });
 
     expect(result).toEqual(mockClaim);
   });
 
-  it('should return all claims with pagination', async () => {
+  
+  it('should return all claims for a user with pagination', async () => {
     prisma.claim.findMany.mockResolvedValue([mockClaim]);
 
-    const result = await repo.findAll({ skip: 0, take: 10 });
+    const result = await repo.findAll({
+      limit: 10,
+      offset: 0,
+      userId: 'user-1',
+    });
 
     expect(prisma.claim.findMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1' },
       skip: 0,
       take: 10,
       orderBy: { createdAt: 'desc' },
@@ -66,17 +76,21 @@ describe('ClaimsRepository', () => {
     expect(result).toEqual([mockClaim]);
   });
 
-  it('should return claims filtered by status', async () => {
+  it('should return claims filtered by status and userId', async () => {
     prisma.claim.findMany.mockResolvedValue([mockClaim]);
 
     const result = await repo.findAllByStatus({
-      skip: 0,
-      take: 10,
+      limit: 10,
+      offset: 0,
       status: ClaimStatus.OPEN,
+      userId: 'user-1',
     });
 
     expect(prisma.claim.findMany).toHaveBeenCalledWith({
-      where: { status: ClaimStatus.OPEN },
+      where: {
+        userId: 'user-1',
+        status: ClaimStatus.OPEN,
+      },
       skip: 0,
       take: 10,
       orderBy: { createdAt: 'desc' },
@@ -85,43 +99,49 @@ describe('ClaimsRepository', () => {
     expect(result).toEqual([mockClaim]);
   });
 
-  it('should return all claims if status not provided', async () => {
+ 
+  it('should return all claims for user if status not provided', async () => {
     prisma.claim.findMany.mockResolvedValue([mockClaim]);
 
     await repo.findAllByStatus({
-      skip: 0,
-      take: 10,
+      limit: 10,
+      offset: 0,
+      userId: 'user-1',
     });
 
     expect(prisma.claim.findMany).toHaveBeenCalledWith({
-      where: undefined,
+      where: { userId: 'user-1' },
       skip: 0,
       take: 10,
       orderBy: { createdAt: 'desc' },
     });
   });
 
-  it('should find claim by id', async () => {
-    prisma.claim.findUnique.mockResolvedValue(mockClaim);
+ 
+  it('should find claim by id and userId', async () => {
+    prisma.claim.findFirst.mockResolvedValue(mockClaim);
 
-    const result = await repo.findById('1');
+    const result = await repo.findById('1', 'user-1');
 
-    expect(prisma.claim.findUnique).toHaveBeenCalledWith({
-      where: { id: '1' },
+    expect(prisma.claim.findFirst).toHaveBeenCalledWith({
+      where: { id: '1', userId: 'user-1' },
     });
 
     expect(result).toEqual(mockClaim);
   });
 
+ 
   it('should update claim', async () => {
     prisma.claim.update.mockResolvedValue({
       ...mockClaim,
       title: 'Updated',
     });
 
-    const result = await repo.update('1', {
-      title: 'Updated',
-    } as any);
+    const result = await repo.update(
+      '1',
+      'user-1',
+      { title: 'Updated' } as any,
+    );
 
     expect(prisma.claim.update).toHaveBeenCalledWith({
       where: { id: '1' },
@@ -131,10 +151,11 @@ describe('ClaimsRepository', () => {
     expect(result.title).toBe('Updated');
   });
 
+
   it('should delete claim', async () => {
     prisma.claim.delete.mockResolvedValue(mockClaim);
 
-    const result = await repo.delete('1');
+    const result = await repo.delete('1', 'user-1');
 
     expect(prisma.claim.delete).toHaveBeenCalledWith({
       where: { id: '1' },

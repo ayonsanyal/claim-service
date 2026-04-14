@@ -6,51 +6,58 @@ import { Claim, ClaimStatus, Prisma } from '@prisma/client';
 export class ClaimsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: Prisma.ClaimCreateInput): Promise<Claim> {
-    return this.prisma.claim.create({
-      data,
-    });
+  async create(data: Prisma.ClaimUncheckedCreateInput): Promise<Claim> {
+    return this.prisma.claim.create({ data });
   }
 
-  async findAll(params: { skip?: number; take?: number }) {
-    const { skip, take } = params;
+  async findAll(params: { limit?: number; offset?: number; userId: string }) {
+    const { limit, offset, userId } = params;
 
     return this.prisma.claim.findMany({
-      skip,
-      take,
+      where: { userId },
+      skip: offset,
+      take: limit,
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async findAllByStatus(params: {
-    skip?: number;
-    take?: number;
+    limit?: number;
+    offset?: number;
     status?: ClaimStatus;
+    userId: string;
   }) {
-    const { skip, take, status } = params;
+    const { limit, offset, status, userId } = params;
 
     return this.prisma.claim.findMany({
-      where: status ? { status } : undefined,
-      skip,
-      take,
+      where: {
+        userId,
+        ...(status && { status }),
+      },
+      skip: offset,
+      take: limit,
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findById(id: string): Promise<Claim | null> {
-    return this.prisma.claim.findUnique({
-      where: { id },
+  async findById(id: string, userId: string): Promise<Claim | null> {
+    return this.prisma.claim.findFirst({
+      where: { id, userId },
     });
   }
 
-  async update(id: string, data: Prisma.ClaimUpdateInput): Promise<Claim> {
+  async update(
+    id: string,
+    userId: string,
+    data: Prisma.ClaimUpdateInput,
+  ): Promise<Claim> {
     return this.prisma.claim.update({
       where: { id },
       data,
     });
   }
 
-  async delete(id: string): Promise<Claim> {
+  async delete(id: string, userId: string): Promise<Claim> {
     return this.prisma.claim.delete({
       where: { id },
     });

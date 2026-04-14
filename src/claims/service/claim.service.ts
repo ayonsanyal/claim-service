@@ -1,23 +1,28 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ClaimsRepository } from 'src/claims/repository/claim.repository';
 import { Claim, ClaimStatus } from '@prisma/client';
-import { QueryClaimDto } from '../qury.claim.dto';
+import { QueryClaimDto } from 'src/claims/query.claim.dto';
 
 @Injectable()
 export class ClaimsService {
-  constructor(private readonly repo: ClaimsRepository) {}
+  constructor(private readonly claimsRepository: ClaimsRepository) {}
 
-  async create(data: { title: string; description: string }): Promise<Claim> {
-    return this.repo.create({
+  async create(
+    data: { title: string; description: string },
+    userId: string,
+  ): Promise<Claim> {
+    return this.claimsRepository.create({
       ...data,
       status: ClaimStatus.OPEN,
+      userId,
     });
   }
 
-  async findAll(query: QueryClaimDto) {
-    const data = await this.repo.findAll({
-      skip: query.offset,
-      take: query.limit,
+  async findAll(query: QueryClaimDto, userId: string) {
+    const data = await this.claimsRepository.findAll({
+      offset: query.offset,
+      limit: query.limit,
+      userId,
     });
 
     return {
@@ -28,15 +33,16 @@ export class ClaimsService {
     };
   }
 
-  async findAllByStatus(query: QueryClaimDto) {
+  async findAllByStatus(query: QueryClaimDto, userId: string) {
     const claimStatus = query.getNormalizedStatus();
-
-    const data = await this.repo.findAllByStatus({
-      skip: query.offset,
-      take: query.limit,
+  
+    const data = await this.claimsRepository.findAllByStatus({
+      offset: query.offset,
+      limit: query.limit,
       status: claimStatus,
+      userId,
     });
-
+  
     return {
       limit: query.limit,
       offset: query.offset,
@@ -45,27 +51,29 @@ export class ClaimsService {
     };
   }
 
-  async findOne(id: string): Promise<Claim> {
-    const claim = await this.repo.findById(id);
-    if (!claim) {
-      throw new BadRequestException('Claim not found');
-    }
+  async findOne(id: string, userId: string): Promise<Claim> {
+    const claim = await this.claimsRepository.findById(id, userId);
+    if (!claim) throw new BadRequestException('Claim not found');
     return claim;
   }
 
-  async update(id: string, data: any): Promise<Claim> {
-    await this.findOne(id); // ensure exists
-    return this.repo.update(id, data);
+  async update(id: string, userId: string, data: any): Promise<Claim> {
+    await this.findOne(id, userId);
+    return this.claimsRepository.update(id, userId, data);
   }
 
-  async delete(id: string): Promise<Claim> {
-    await this.findOne(id);
-    return this.repo.delete(id);
+  async delete(id: string, userId: string): Promise<Claim> {
+    await this.findOne(id, userId);
+    return this.claimsRepository.delete(id, userId);
   }
 
-  async changeStatus(id: string, newStatus: ClaimStatus): Promise<Claim> {
-    const claim = await this.findOne(id);
-
+  async changeStatus(
+    id: string,
+    userId: string,
+    newStatus: ClaimStatus,
+  ): Promise<Claim> {
+    const claim = await this.findOne(id, userId);
+    
     const validTransitions: Record<ClaimStatus, ClaimStatus[]> = {
       [ClaimStatus.OPEN]: [ClaimStatus.IN_REVIEW],
       [ClaimStatus.IN_REVIEW]: [ClaimStatus.CLOSED],
@@ -73,11 +81,9 @@ export class ClaimsService {
     };
 
     if (!validTransitions[claim.status].includes(newStatus)) {
-      throw new BadRequestException(
-        `Invalid transition from ${claim.status} to ${newStatus}`,
-      );
+      throw new BadRequestException('Invalid transition');
     }
 
-    return this.repo.update(id, { status: newStatus });
+    return this.claimsRepository.update(id, userId, { status: newStatus });
   }
 }
