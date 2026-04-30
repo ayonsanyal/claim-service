@@ -16,7 +16,6 @@ describe('ClaimsController', () => {
     update: jest.fn(),
     delete: jest.fn(),
     changeStatus: jest.fn(),
-    //config methods
     getFunnelConfig: jest.fn(),
     reorderSteps: jest.fn(),
     switchVariant: jest.fn(),
