@@ -1,4 +1,4 @@
-#Claim Service
+## Claim Service
 
 A scalable and production-ready **NestJS backend service** for managing claims, built with **TypeScript** and a clean layered architecture.
 
