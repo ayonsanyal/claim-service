@@ -64,7 +64,7 @@ export class ClaimsService {
 
   async delete(id: string, userId: string): Promise<Claim> {
     await this.findOne(id, userId);
-    return this.claimsRepository.delete(id, userId);
+    return this.claimsRepository.delete(id);
   }
 
   async changeStatus(
