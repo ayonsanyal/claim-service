@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15
-    container_name: stotage-claim-postgres
+    container_name: storage-claims-postgres
     restart: always
     environment:
       POSTGRES_USER: claim
@@ -13,6 +13,19 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  claims-service:
+    build: .
+    container_name: claims-service
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://claim:claim@postgres:5432/claims_db
+      DATASOURCE_URL: postgresql://claim:claim@postgres:5432/claims_db
+      JWT_SECRET: supersecretkey
 
 volumes:
   postgres_data:

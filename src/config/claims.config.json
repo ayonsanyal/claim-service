@@ -1,0 +1,18 @@
+{
+    "steps": [
+      {
+        "id": "create",
+        "title": "Create Claim",
+        "fields": [
+          { "name": "title", "label": "Title", "type": "text" },
+          { "name": "description", "label": "Description", "type": "textarea" }
+        ],
+        "action": "createClaim"
+      },
+      {
+        "id": "list",
+        "title": "Claims",
+        "action": "fetchClaims"
+      }
+    ]
+  }

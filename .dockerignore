@@ -1,0 +1,4 @@
+dist
+.git
+dockerfile
+docker-compose.yaml

@@ -41,7 +41,7 @@ describe('AuthService', () => {
     expect(repoMock.create).toHaveBeenCalled();
     const callArg = repoMock.create.mock.calls[0][0];
 
-    expect(callArg.password).not.toBe('123456'); 
+    expect(callArg.password).not.toBe('123456');
   });
 
   it('should login successfully', async () => {
@@ -61,9 +61,9 @@ describe('AuthService', () => {
   it('should fail if email not found', async () => {
     repoMock.findByEmail.mockResolvedValue(null);
 
-    await expect(
-      service.login('wrong@test.com', '123456'),
-    ).rejects.toThrow(UnauthorizedException);
+    await expect(service.login('wrong@test.com', '123456')).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('should fail if password is invalid', async () => {
@@ -75,8 +75,8 @@ describe('AuthService', () => {
       password: hashed,
     });
 
-    await expect(
-      service.login('test@test.com', 'wrong'),
-    ).rejects.toThrow(UnauthorizedException);
+    await expect(service.login('test@test.com', 'wrong')).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 });

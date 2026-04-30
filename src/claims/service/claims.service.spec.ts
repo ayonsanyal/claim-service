@@ -26,6 +26,8 @@ describe('ClaimsService', () => {
       findById: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      getConfig: jest.fn(),
+      saveConfig: jest.fn(),
     } as any;
 
     service = new ClaimsService(repo);
@@ -34,7 +36,6 @@ describe('ClaimsService', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
-
 
   it('should create a claim with OPEN status and userId', async () => {
     repo.create.mockResolvedValue(mockClaim);
@@ -54,7 +55,6 @@ describe('ClaimsService', () => {
     expect(result).toEqual(mockClaim);
   });
 
-  
   it('should return paginated claims with userId', async () => {
     repo.findAll.mockResolvedValue([mockClaim]);
 
@@ -76,8 +76,7 @@ describe('ClaimsService', () => {
     });
   });
 
- 
-  it('should return claims filtered by status and userId', async () => {
+  it('should return claims filtered by status and userId if found', async () => {
     repo.findAllByStatus.mockResolvedValue([mockClaim]);
 
     const query: any = {
@@ -103,7 +102,27 @@ describe('ClaimsService', () => {
     });
   });
 
- 
+  it('should return claims filtered by status and userId if not found', async () => {
+    repo.findAllByStatus.mockResolvedValue([]);
+
+    const query: any = {
+      limit: 10,
+      offset: 0,
+      getNormalizedStatus: () => ClaimStatus.OPEN,
+    };
+
+    const result = await service.findAllByStatus(query, userId);
+
+    expect(repo.findAllByStatus).toHaveBeenCalled();
+
+    expect(result).toEqual({
+      limit: 10,
+      offset: 0,
+      count: 0,
+      data: [],
+    });
+  });
+
   it('should return claim if found (with userId)', async () => {
     repo.findById.mockResolvedValue(mockClaim);
 
@@ -121,7 +140,6 @@ describe('ClaimsService', () => {
     );
   });
 
-
   it('should update claim if exists', async () => {
     repo.findById.mockResolvedValue(mockClaim);
     repo.update.mockResolvedValue({
@@ -129,11 +147,7 @@ describe('ClaimsService', () => {
       title: 'Updated',
     });
 
-    const result = await service.update(
-      '1',
-      userId,
-      { title: 'Updated' },
-    );
+    const result = await service.update('1', userId, { title: 'Updated' });
 
     expect(repo.update).toHaveBeenCalledWith('1', userId, {
       title: 'Updated',
@@ -150,7 +164,6 @@ describe('ClaimsService', () => {
     );
   });
 
-  
   it('should delete claim if exists', async () => {
     repo.findById.mockResolvedValue(mockClaim);
     repo.delete.mockResolvedValue(mockClaim);
@@ -169,7 +182,6 @@ describe('ClaimsService', () => {
     );
   });
 
-  
   it('should allow valid transition OPEN → IN_REVIEW', async () => {
     repo.findById.mockResolvedValue({
       ...mockClaim,
@@ -203,5 +215,84 @@ describe('ClaimsService', () => {
     await expect(
       service.changeStatus('1', userId, ClaimStatus.CLOSED),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should get funnel config', async () => {
+    repo.getConfig.mockResolvedValue({
+      version: 1,
+      activeVariant: 'A',
+      variants: {
+        A: { steps: ['x'] },
+      },
+    });
+
+    const result = await service.getFunnelConfig('abc');
+
+    expect(result.version).toBe(1);
+    expect(result.variant).toBe('A');
+  });
+
+  it('should reorder steps', async () => {
+    repo.getConfig.mockResolvedValue({
+      version: 1,
+      activeVariant: 'A',
+      variants: {
+        A: {
+          steps: [{ id: 'create' }, { id: 'list' }],
+        },
+      },
+      history: [],
+    });
+
+    await service.reorderSteps(['list', 'create']);
+
+    expect(repo.saveConfig).toHaveBeenCalled();
+  });
+
+  it('should switch variant', async () => {
+    repo.getConfig.mockResolvedValue({
+      version: 1,
+      activeVariant: 'A',
+      variants: {},
+      history: [],
+    });
+
+    await service.switchVariant('B');
+
+    expect(repo.saveConfig).toHaveBeenCalled();
+  });
+
+  it('should restore version', async () => {
+    repo.getConfig.mockResolvedValue({
+      version: 2,
+      history: [
+        {
+          version: 1,
+          variants: {
+            A: { steps: [] },
+          },
+        },
+      ],
+      variants: {},
+    });
+
+    await service.restoreVersion(1);
+
+    expect(repo.saveConfig).toHaveBeenCalled();
+  });
+
+  it('should get versions', async () => {
+    repo.getConfig.mockResolvedValue({
+      history: [
+        {
+          version: 1,
+          savedAt: 'today',
+        },
+      ],
+    });
+
+    const result = await service.getVersions();
+
+    expect(result[0].version).toBe(1);
   });
 });

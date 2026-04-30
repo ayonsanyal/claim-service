@@ -38,7 +38,6 @@ describe('ClaimsGrpcController', () => {
     jest.clearAllMocks();
   });
 
-
   it('should create claim', async () => {
     await controller.createClaim({
       title: 'Test',
@@ -52,7 +51,6 @@ describe('ClaimsGrpcController', () => {
     );
   });
 
-  
   it('should get claims', async () => {
     await controller.getClaims({
       limit: 10,
@@ -66,7 +64,6 @@ describe('ClaimsGrpcController', () => {
     );
   });
 
- 
   it('should get claims by status', async () => {
     await controller.getClaimsByStatus({
       status: 'OPEN',
@@ -84,13 +81,11 @@ describe('ClaimsGrpcController', () => {
     );
   });
 
-  
   it('should get claim by id', async () => {
     await controller.getClaimById({ id: '1', userId });
 
     expect(service.findOne).toHaveBeenCalledWith('1', userId);
   });
-
 
   it('should update claim', async () => {
     await controller.updateClaim({
@@ -100,16 +95,11 @@ describe('ClaimsGrpcController', () => {
       userId,
     });
 
-    expect(service.update).toHaveBeenCalledWith(
-      '1',
-      userId,
-      {
-        title: 'Updated',
-        description: 'Desc',
-      },
-    );
+    expect(service.update).toHaveBeenCalledWith('1', userId, {
+      title: 'Updated',
+      description: 'Desc',
+    });
   });
-
 
   it('should delete claim', async () => {
     await controller.deleteClaim({ id: '1', userId });
@@ -117,7 +107,6 @@ describe('ClaimsGrpcController', () => {
     expect(service.delete).toHaveBeenCalledWith('1', userId);
   });
 
- 
   it('should change status', async () => {
     await controller.changeStatus({
       id: '1',

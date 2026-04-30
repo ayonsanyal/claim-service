@@ -32,7 +32,7 @@ describe('LoginDto', () => {
 
     expect(errors.length).toBeGreaterThan(0);
 
-    const passwordError = errors.find(e => e.property === 'password');
+    const passwordError = errors.find((e) => e.property === 'password');
     expect(passwordError).toBeDefined();
   });
 

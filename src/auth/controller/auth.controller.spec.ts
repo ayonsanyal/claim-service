@@ -32,7 +32,6 @@ describe('AuthController', () => {
     jest.clearAllMocks();
   });
 
-
   it('should call service.register with email and password', async () => {
     serviceMock.register.mockResolvedValue({ id: '1' });
 
@@ -40,13 +39,9 @@ describe('AuthController', () => {
 
     const result = await controller.register(dto as any);
 
-    expect(serviceMock.register).toHaveBeenCalledWith(
-      dto.email,
-      dto.password,
-    );
+    expect(serviceMock.register).toHaveBeenCalledWith(dto.email, dto.password);
     expect(result).toEqual({ id: '1' });
   });
-
 
   it('should call service.login with email and password', async () => {
     serviceMock.login.mockResolvedValue({ access_token: 'token' });
@@ -55,14 +50,10 @@ describe('AuthController', () => {
 
     const result = await controller.login(dto as any);
 
-    expect(serviceMock.login).toHaveBeenCalledWith(
-      dto.email,
-      dto.password,
-    );
+    expect(serviceMock.login).toHaveBeenCalledWith(dto.email, dto.password);
     expect(result).toHaveProperty('access_token');
   });
 
-  
   it('should call service.findAll with parsed limit and offset', async () => {
     serviceMock.findAll.mockResolvedValue([]);
 
@@ -85,7 +76,6 @@ describe('AuthController', () => {
     });
   });
 
-
   it('should call service.findById', async () => {
     serviceMock.findById.mockResolvedValue({ id: '1' });
 
@@ -94,7 +84,6 @@ describe('AuthController', () => {
     expect(serviceMock.findById).toHaveBeenCalledWith('1');
     expect(result).toEqual({ id: '1' });
   });
-
 
   it('should call service.update', async () => {
     const updateData = { email: 'new@test.com' };
@@ -106,7 +95,6 @@ describe('AuthController', () => {
     expect(serviceMock.update).toHaveBeenCalledWith('1', updateData);
     expect(result).toHaveProperty('email', 'new@test.com');
   });
-
 
   it('should call service.delete', async () => {
     serviceMock.delete.mockResolvedValue({ id: '1' });

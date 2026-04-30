@@ -11,19 +11,46 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ClaimsService } from 'src/claims/service/claim.service';
 import { CreateClaimDto } from 'src/claims/claim.dto';
 import { UpdateClaimDto } from 'src/claims/update.claim.dto';
 import { UpdateStatusDto } from 'src/claims/update.claim.status';
 import { QueryClaimDto } from 'src/claims/query.claim.dto';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { ReorderConfigDto } from '../funnel.designer.dto';
 
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard)
 @Controller('claims')
 export class ClaimsController {
   constructor(private readonly service: ClaimsService) {}
+
+  @Get('config')
+  getConfig(@Req() req: any) {
+    return this.service.getFunnelConfig(req.user.userId);
+  }
+
+  @Put('config/reorder')
+  @ApiOperation({ summary: 'Reorder funnel steps' })
+  reorder(@Body() body: ReorderConfigDto) {
+    return this.service.reorderSteps(body.stepIds);
+  }
+
+  @Post('config/variant/:name')
+  switchVariant(@Param('name') name: string) {
+    return this.service.switchVariant(name);
+  }
+
+  @Post('config/restore/:version')
+  restore(@Param('version') version: string) {
+    return this.service.restoreVersion(Number(version));
+  }
+
+  @Get('config/versions')
+  versions() {
+    return this.service.getVersions();
+  }
 
   @Post()
   create(@Req() req, @Body() body: CreateClaimDto) {
@@ -46,11 +73,7 @@ export class ClaimsController {
   }
 
   @Put(':id')
-  update(
-    @Req() req,
-    @Param('id') id: string,
-    @Body() body: UpdateClaimDto,
-  ) {
+  update(@Req() req, @Param('id') id: string, @Body() body: UpdateClaimDto) {
     return this.service.update(id, req.user.userId, body);
   }
 
@@ -65,10 +88,6 @@ export class ClaimsController {
     @Param('id') id: string,
     @Body() body: UpdateStatusDto,
   ) {
-    return this.service.changeStatus(
-      id,
-      req.user.userId,
-      body.toEnum(),
-    );
+    return this.service.changeStatus(id, req.user.userId, body.toEnum());
   }
 }

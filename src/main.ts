@@ -1,5 +1,4 @@
 import 'reflect-metadata';
-import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -10,7 +9,7 @@ import { LoggingInterceptor } from 'src/claims/common/logging/logging.intercepto
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
- app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalInterceptors(new LoggingInterceptor());
   //Global validation
   app.useGlobalPipes(
     new ValidationPipe({
@@ -19,7 +18,6 @@ async function bootstrap() {
       transform: true,
     }),
   );
-
 
   //  Swagger setup
   const config = new DocumentBuilder()
@@ -38,7 +36,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  
+
   document.security = [{ 'access-token': [] }];
   SwaggerModule.setup('api', app, document);
   app.enableCors({

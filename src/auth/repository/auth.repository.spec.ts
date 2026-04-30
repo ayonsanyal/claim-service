@@ -27,7 +27,10 @@ describe('AuthRepository', () => {
   });
 
   it('should create user', async () => {
-    prismaMock.user.create.mockResolvedValue({ id: '1', email: 'test@test.com' });
+    prismaMock.user.create.mockResolvedValue({
+      id: '1',
+      email: 'test@test.com',
+    });
 
     const result = await repo.create({
       email: 'test@test.com',
@@ -39,7 +42,10 @@ describe('AuthRepository', () => {
   });
 
   it('should find by email', async () => {
-    prismaMock.user.findUnique.mockResolvedValue({ id: '1', email: 'test@test.com' });
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: '1',
+      email: 'test@test.com',
+    });
 
     const result = await repo.findByEmail('test@test.com');
 

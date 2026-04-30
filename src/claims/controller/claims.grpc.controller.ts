@@ -21,11 +21,7 @@ export class ClaimsGrpcController {
   }
 
   @GrpcMethod('ClaimsService', 'GetClaims')
-  async getClaims(data: {
-    limit?: number;
-    offset?: number;
-    userId: string;
-  }) {
+  async getClaims(data: { limit?: number; offset?: number; userId: string }) {
     const result = await this.service.findAll(
       {
         limit: data.limit ?? 10,
@@ -47,8 +43,7 @@ export class ClaimsGrpcController {
     const query = {
       limit: data.limit ?? 10,
       offset: data.offset ?? 0,
-      getNormalizedStatus: () =>
-        data.status.toUpperCase() as ClaimStatus,
+      getNormalizedStatus: () => data.status.toUpperCase() as ClaimStatus,
     };
 
     const result = await this.service.findAllByStatus(
@@ -72,14 +67,10 @@ export class ClaimsGrpcController {
     description?: string;
     userId: string;
   }) {
-    const claim = await this.service.update(
-      data.id,
-      data.userId,
-      {
-        title: data.title,
-        description: data.description,
-      },
-    );
+    const claim = await this.service.update(data.id, data.userId, {
+      title: data.title,
+      description: data.description,
+    });
 
     return { claim };
   }
@@ -91,18 +82,10 @@ export class ClaimsGrpcController {
   }
 
   @GrpcMethod('ClaimsService', 'ChangeStatus')
-  async changeStatus(data: {
-    id: string;
-    status: string;
-    userId: string;
-  }) {
+  async changeStatus(data: { id: string; status: string; userId: string }) {
     const status = data.status.toUpperCase() as ClaimStatus;
 
-    const claim = await this.service.changeStatus(
-      data.id,
-      data.userId,
-      status,
-    );
+    const claim = await this.service.changeStatus(data.id, data.userId, status);
 
     return { claim };
   }

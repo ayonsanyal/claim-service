@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Get, Query, Param, Patch,Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Query,
+  Param,
+  Patch,
+  Delete,
+} from '@nestjs/common';
 import { AuthService } from 'src/auth/service/auth.service';
 import { RegisterDto } from 'src/auth/register.dto';
 import { LoginDto } from 'src/auth/login.dto';
@@ -19,10 +28,7 @@ export class AuthController {
   }
 
   @Get()
-  findAll(
-    @Query('limit') limit?: string,
-    @Query('offset') offset?: string,
-  ) {
+  findAll(@Query('limit') limit?: string, @Query('offset') offset?: string) {
     return this.service.findAll({
       limit: limit ? Number(limit) : undefined,
       offset: offset ? Number(offset) : undefined,
@@ -35,10 +41,7 @@ export class AuthController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() data: Prisma.UserUpdateInput,
-  ) {
+  update(@Param('id') id: string, @Body() data: Prisma.UserUpdateInput) {
     return this.service.update(id, data);
   }
 
@@ -46,5 +49,4 @@ export class AuthController {
   delete(@Param('id') id: string) {
     return this.service.delete(id);
   }
-
 }

@@ -26,7 +26,7 @@ export class AuthRepository {
 
   async findAll(params: { limit?: number; offset?: number }) {
     const { limit, offset } = params;
-  
+
     return this.prisma.user.findMany({
       skip: offset,
       take: limit,
